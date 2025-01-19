@@ -1,58 +1,76 @@
+const fs = require('fs');
 const express = require('express');
-const app = express();
-const bodyParser = require('body-parser');
 const cors = require('cors');
+const bodyParser = require('body-parser');
+const morgan = require('morgan');
+const pg = require('pg');
 
-// Middleware setup
-app.use(bodyParser.json());
+const config = JSON.parse(fs.readFileSync('./config.json', 'utf-8'));
+
+const app = express();
+
+app.use(morgan('tiny'));
 app.use(cors());
-
-// Mock database for simplicity
-const inventory = [];
-
-// Helper function to find an item by ID
-const findItemById = (id) => inventory.find((item) => item.id === id);
-//
-// API endpoints
-
-// Get all items
-app.get('/api/items', (req, res) => {
-  res.json(inventory);
+app.use(bodyParser.json());
+app.use((err, req, res, next) => {
+    res.status(400).json({ error: err.message });
 });
 
-// Add a new item (state defaults to 'free')
-app.post('/api/items', (req, res) => {
-  const { name, notes } = req.body;
-  const newItem = {
-    id: inventory.length + 1,
-    name,
-    notes: notes || '',
-    state: 'free',
-  };
-  inventory.push(newItem);
-  res.status(201).json(newItem);
+app.use(express.static(config.frontend));
+
+let pgClient = null;
+const api = '/api/';
+const itemsSuffix = 'items';
+
+app.get(api + itemsSuffix, (req, res) => {
+    pgClient.query('SELECT * FROM inventory', [], (err, data) => {
+        if (err) {
+            res.status(500).json({ error: 'Failed to fetch items' });
+        } else {
+            res.json(data.rows);
+        }
+    });
 });
 
-// Edit notes for non-free items
-app.put('/api/items/:id/notes', (req, res) => {
-  const { id } = req.params;
-  const { notes } = req.body;
-  const item = findItemById(parseInt(id, 10));
-
-  if (!item) {
-    return res.status(404).json({ error: 'Item not found' });
-  }
-
-  if (item.state === 'free') {
-    return res.status(400).json({ error: 'Cannot edit notes for items in free state' });
-  }
-
-  item.notes = notes;
-  res.json(item);
+app.post(api + itemsSuffix, (req, res) => {
+    const { name, notes } = req.body;
+    const parameters = [name, notes || '', 'free'];
+    pgClient.query('INSERT INTO inventory (name, notes, state) VALUES ($1, $2, $3) RETURNING *', parameters, (err, data) => {
+        if (err) {
+            res.status(500).json({ error: 'Failed to add item' });
+        } else {
+            res.status(201).json(data.rows[0]);
+        }
+    });
 });
 
-// Set server to listen
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.put(api + itemsSuffix + '/:id/notes', (req, res) => {
+    const { id } = req.params;
+    const { notes } = req.body;
+    pgClient.query('SELECT * FROM inventory WHERE id = $1', [id], (err, data) => {
+        if (err) {
+            res.status(500).json({ error: 'Failed to fetch item' });
+        } else if (data.rows.length === 0) {
+            res.status(404).json({ error: 'Item not found' });
+        } else if (data.rows[0].state === 'free') {
+            res.status(400).json({ error: 'Cannot edit notes for items in free state' });
+        } else {
+            pgClient.query('UPDATE inventory SET notes = $1 WHERE id = $2 RETURNING *', [notes, id], (err, data) => {
+                if (err) {
+                    res.status(500).json({ error: 'Failed to update notes' });
+                } else {
+                    res.json(data.rows[0]);
+                }
+            });
+        }
+    });
+});
+
+app.listen(config.port, () => {
+    pgClient = new pg.Client(config.db);
+    pgClient.connect().catch(err => {
+        console.error(err);
+        process.exit(0);
+    });
+    console.log('DB connected, backend is listening on port', config.port);
 });
