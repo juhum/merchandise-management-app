@@ -46,20 +46,25 @@ This is a web application for managing goods, built with Vue.js for the frontend
 5. Run sql scripts
 
 6. Start the backend server:
+```sh
 node server.js
-
+```
 ### Frontend
 
 1. Navigate to the frontend directory:
+```sh
 cd frontend
-
-2. Install dependencies:
+```
+3. Install dependencies:
+```sh
 npm install
+```
 
-3. Start the frontend development server:
+4. Start the frontend development server:
+```sh
 npm run serve
-
-4. Open your web browser and navigate to http://localhost:8080.
+```
+6. Open your web browser and navigate to http://localhost:8080.
 
 
 ## Usage
