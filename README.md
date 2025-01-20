@@ -29,21 +29,23 @@ This is a web application for managing goods, built with Vue.js for the frontend
     npm install
 
 3. Create a config.json file in the root directory with the following content:
+```json
 {
-  "port": 5000,
-  "db": {
-    "user": "your_db_user",
-    "password": "your_db_password",
-    "host": "your_db_host",
-    "port": 5432,
-    "database": "your_db_name"
-  },
-  "frontend": "path_to_frontend_build_directory"
+    "port": 5000,
+    "frontend": "./frontend/dist",
+    "db": {
+        "user": "your_db_user",
+        "password": "your_db_password",
+        "host": "localhost",
+        "port": 5432,
+        "database": "postgres"
+    }
 }
+```
 
-4. Run sql scripts
+5. Run sql scripts
 
-5. Start the backend server:
+6. Start the backend server:
 node server.js
 
 ### Frontend
