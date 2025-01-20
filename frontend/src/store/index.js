@@ -1,10 +1,9 @@
-import Vue from 'vue';
-import Vuex from 'vuex';
+import { createStore } from 'vuex';
 import axios from 'axios';
 
-Vue.use(Vuex);
+axios.defaults.baseURL = 'http://localhost:5000';
 
-export default new Vuex.Store({
+export default createStore({
   state: {
     items: []
   },
