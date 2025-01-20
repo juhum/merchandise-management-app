@@ -1,6 +1,5 @@
 <template>
-  <div>
-    <h1>Goods Management</h1>
+  <div class="home">
     <ItemList />
   </div>
 </template>
@@ -15,3 +14,15 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+.home {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  color: #42b983;
+}
+</style>

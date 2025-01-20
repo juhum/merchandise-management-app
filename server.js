@@ -23,7 +23,7 @@ const api = '/api/';
 const itemsSuffix = 'items';
 
 app.get(api + itemsSuffix, (req, res) => {
-    pgClient.query('SELECT * FROM inventory', [], (err, data) => {
+    pgClient.query('SELECT * FROM inventory ORDER BY id DESC', [], (err, data) => {
         if (err) {
             console.error('Error fetching items:', err);
             res.status(500).json({ error: 'Failed to fetch items' });
